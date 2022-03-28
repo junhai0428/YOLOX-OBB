@@ -24,7 +24,8 @@ class ExpOBB_KLD(BaseExp):
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
-        self.data_num_workers = 4
+        # TODO: num_workers = 4
+        self.data_num_workers = 0
         self.input_size = (640, 640)
         self.random_size = (14, 26)
         self.data_dir = None

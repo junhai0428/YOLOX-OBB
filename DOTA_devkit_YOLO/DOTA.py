@@ -120,7 +120,6 @@ if __name__ == '__main__':
     imgids = examplesplit.getImgIds(catNms=['small-vehicle'])  # 获取包含该类名的所有图片id eg:['P1088']
     img = examplesplit.loadImgs(imgids)  # 获取对应id图片所对应的small-vehicle张量数组
     for imgid in imgids:
-        imgid = 'P0003'  #图片名称
         anns = examplesplit.loadAnns(imgId=imgid)  # 加载对应id图片的labels相关信息
         '''
         anns =

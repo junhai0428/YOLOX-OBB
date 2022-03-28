@@ -11,7 +11,7 @@ stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr
 # sys.setdefaultencoding('utf-8')
 # sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde
 
-category_set = ['ship']
+category_set = ['car']
 
 
 def custombasename(fullname):
