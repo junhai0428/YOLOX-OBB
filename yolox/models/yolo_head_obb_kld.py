@@ -463,7 +463,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
         else:
             loss_l1 = 0.0
 
-        reg_weight = 5.0
+        reg_weight = 50.0
         loss = reg_weight * loss_iou + loss_obj + loss_cls + loss_l1
 
         return (

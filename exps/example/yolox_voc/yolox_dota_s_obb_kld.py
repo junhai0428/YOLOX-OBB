@@ -11,11 +11,11 @@ from yolox.exp import ExpOBB_KLD as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        self.input_size = (1024, 1024) #add
+        self.input_size = (1024, 1024)  # add
         self.random_size = (28, 36)
         self.num_classes = 1
-        self.depth = 0.33
-        self.width = 0.50
+        self.depth = 0.25
+        self.width = 0.25
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
         # --------------- transform config ----------------- #
@@ -28,8 +28,8 @@ class Exp(MyExp):
         self.enable_mixup = False
 
         # --------------  training config --------------------- #
-        self.warmup_epochs = 5
-        self.max_epoch = 50
+        self.warmup_epochs = 15
+        self.max_epoch = 150
         self.warmup_lr = 0
         self.basic_lr_per_img = 0.0025 / 16.0
         self.scheduler = "yoloxwarmcos"
@@ -39,16 +39,16 @@ class Exp(MyExp):
 
         self.weight_decay = 5e-4
         self.momentum = 0.9
-        self.save_interval = 1
+        self.save_interval = 10
         self.print_interval = 5
         self.eval_interval = 50
 
         # -----------------  testing config ------------------ #
         self.test_size = (1024, 1024)
         self.test_conf = 0.01
-        self.nmsthre = 0.3 #default 0.65
+        self.nmsthre = 0.3  # default 0.65
 
-    def get_data_loader(self, batch_size, is_distributed, no_aug=False):  #  no_aug=False
+    def get_data_loader(self, batch_size, is_distributed, no_aug=False):  # no_aug=False
         from yolox.data import (
             DOTAOBBDetection,
             TrainTransformOBB,
@@ -59,9 +59,9 @@ class Exp(MyExp):
         )
 
         dataset = DOTAOBBDetection(
-            #data_dir=os.path.join(get_yolox_datadir(), "VOCdevkit"), #delete
-            data_dir = '/data/vpta/voc_dataset',
-            #image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
+            # data_dir=os.path.join(get_yolox_datadir(), "VOCdevkit"), #delete
+            data_dir='/data/vpta/voc_dataset',
+            # image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
             image_sets=[('2012', 'train')],
             img_size=self.input_size,
             preproc=TrainTransformOBB(
@@ -115,8 +115,8 @@ class Exp(MyExp):
         from yolox.data import DOTAOBBDetection, ValTransformOBB
 
         valdataset = DOTAOBBDetection(
-            #data_dir=os.path.join(get_yolox_datadir(), "VOCdevkit"),
-            data_dir='/data/vpta/voc_dataset', #add
+            # data_dir=os.path.join(get_yolox_datadir(), "VOCdevkit"),
+            data_dir='/data/vpta/voc_dataset',  # add
             image_sets=[('2012', 'val')],
             img_size=self.test_size,
             preproc=ValTransformOBB(
@@ -133,12 +133,8 @@ class Exp(MyExp):
         else:
             sampler = torch.utils.data.SequentialSampler(valdataset)
 
-        dataloader_kwargs = {
-            "num_workers": self.data_num_workers,
-            "pin_memory": True,
-            "sampler": sampler,
-        }
-        dataloader_kwargs["batch_size"] = batch_size
+        dataloader_kwargs = {"num_workers": self.data_num_workers, "pin_memory": True, "sampler": sampler,
+                             "batch_size": batch_size}
         val_loader = torch.utils.data.DataLoader(valdataset, **dataloader_kwargs)
 
         return val_loader
