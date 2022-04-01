@@ -3,9 +3,9 @@
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
 import os
 import shutil
-from loguru import logger
 
 import torch
+from loguru import logger
 
 
 def load_ckpt(model, ckpt):

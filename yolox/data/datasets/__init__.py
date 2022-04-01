@@ -5,9 +5,9 @@
 from .coco import COCODataset
 from .coco_classes import COCO_CLASSES
 from .datasets_wrapper import ConcatDataset, Dataset, MixConcatDataset
-from .mosaicdetection import MosaicDetection
-from .mosaicdetection_obb import MosaicDetectionOBB
-from .voc import VOCDetection
 from .dior import DIORDetection
 from .dota import DOTADetection
 from .dota_obb import DOTAOBBDetection
+from .mosaicdetection import MosaicDetection
+from .mosaicdetection_obb import MosaicDetectionOBB
+from .voc import VOCDetection

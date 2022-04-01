@@ -8,10 +8,10 @@ import itertools
 import json
 import tempfile
 import time
-from loguru import logger
-from tqdm import tqdm
 
 import torch
+from loguru import logger
+from tqdm import tqdm
 
 from yolox.utils import (
     gather,
@@ -30,7 +30,7 @@ class COCOEvaluator:
     """
 
     def __init__(
-        self, dataloader, img_size, confthre, nmsthre, num_classes, testdev=False
+            self, dataloader, img_size, confthre, nmsthre, num_classes, testdev=False
     ):
         """
         Args:
@@ -49,13 +49,13 @@ class COCOEvaluator:
         self.testdev = testdev
 
     def evaluate(
-        self,
-        model,
-        distributed=False,
-        half=False,
-        trt_file=None,
-        decoder=None,
-        test_size=None,
+            self,
+            model,
+            distributed=False,
+            half=False,
+            trt_file=None,
+            decoder=None,
+            test_size=None,
     ):
         """
         COCO average precision (AP) Evaluation. Iterate inference on the test dataset
@@ -95,7 +95,7 @@ class COCOEvaluator:
             model = model_trt
 
         for cur_iter, (imgs, _, info_imgs, ids) in enumerate(
-            progress_bar(self.dataloader)
+                progress_bar(self.dataloader)
         ):
             with torch.no_grad():
                 imgs = imgs.type(tensor_type)
@@ -135,7 +135,7 @@ class COCOEvaluator:
     def convert_to_coco_format(self, outputs, info_imgs, ids):
         data_list = []
         for (output, img_h, img_w, img_id) in zip(
-            outputs, info_imgs[0], info_imgs[1], ids
+                outputs, info_imgs[0], info_imgs[1], ids
         ):
             if output is None:
                 continue
@@ -183,9 +183,9 @@ class COCOEvaluator:
             [
                 "Average {} time: {:.2f} ms".format(k, v)
                 for k, v in zip(
-                    ["forward", "NMS", "inference"],
-                    [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
-                )
+                ["forward", "NMS", "inference"],
+                [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
+            )
             ]
         )
 

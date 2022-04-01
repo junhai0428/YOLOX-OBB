@@ -24,7 +24,7 @@ class ExpOBB_KLD(BaseExp):
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
-        # TODO: num_workers = 4
+        # TODO: data_num_workers = 4
         self.data_num_workers = 0
         self.input_size = (640, 640)
         self.random_size = (14, 26)
@@ -137,8 +137,7 @@ class ExpOBB_KLD(BaseExp):
             mosaic=not no_aug,
         )
 
-        dataloader_kwargs = {"num_workers": self.data_num_workers, "pin_memory": True}
-        dataloader_kwargs["batch_sampler"] = batch_sampler
+        dataloader_kwargs = {"num_workers": self.data_num_workers, "pin_memory": True, "batch_sampler": batch_sampler}
         train_loader = DataLoader(self.dataset, **dataloader_kwargs)
 
         return train_loader
@@ -225,12 +224,8 @@ class ExpOBB_KLD(BaseExp):
         else:
             sampler = torch.utils.data.SequentialSampler(valdataset)
 
-        dataloader_kwargs = {
-            "num_workers": self.data_num_workers,
-            "pin_memory": True,
-            "sampler": sampler,
-        }
-        dataloader_kwargs["batch_size"] = batch_size
+        dataloader_kwargs = {"num_workers": self.data_num_workers, "pin_memory": True, "sampler": sampler,
+                             "batch_size": batch_size}
         val_loader = torch.utils.data.DataLoader(valdataset, **dataloader_kwargs)
 
         return val_loader

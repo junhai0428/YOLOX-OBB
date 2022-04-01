@@ -8,8 +8,8 @@ import cv2
 import numpy as np
 from pycocotools.coco import COCO
 
-from ..dataloading import get_yolox_datadir
 from .datasets_wrapper import Dataset
+from ..dataloading import get_yolox_datadir
 
 
 class COCODataset(Dataset):
@@ -18,12 +18,12 @@ class COCODataset(Dataset):
     """
 
     def __init__(
-        self,
-        data_dir=None,
-        json_file="instances_train2017.json",
-        name="train2017",
-        img_size=(416, 416),
-        preproc=None,
+            self,
+            data_dir=None,
+            json_file="instances_train2017.json",
+            name="train2017",
+            img_size=(416, 416),
+            preproc=None,
     ):
         """
         COCO dataset initialization. Annotation data are read into memory by COCO API.

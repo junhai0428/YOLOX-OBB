@@ -6,14 +6,14 @@ import sys
 import tempfile
 import time
 from collections import ChainMap
+
+import numpy as np
+import torch
 from loguru import logger
 from tqdm import tqdm
 
-import numpy as np
-
-import torch
-
-from yolox.utils import gather, is_main_process, postprocess, postprocessobb, postprocessobb_kld, synchronize, time_synchronized
+from yolox.utils import gather, is_main_process, postprocessobb_kld, synchronize, \
+    time_synchronized
 
 
 class DOTAEvaluator:
@@ -22,12 +22,12 @@ class DOTAEvaluator:
     """
 
     def __init__(
-        self,
-        dataloader,
-        img_size,
-        confthre,
-        nmsthre,
-        num_classes,
+            self,
+            dataloader,
+            img_size,
+            confthre,
+            nmsthre,
+            num_classes,
     ):
         """
         Args:
@@ -46,13 +46,13 @@ class DOTAEvaluator:
         self.num_images = len(dataloader.dataset)
 
     def evaluate(
-        self,
-        model,
-        distributed=False,
-        half=False,
-        trt_file=None,
-        decoder=None,
-        test_size=None,
+            self,
+            model,
+            distributed=False,
+            half=False,
+            trt_file=None,
+            decoder=None,
+            test_size=None,
     ):
         """
         VOC average precision (AP) Evaluation. Iterate inference on the test dataset
@@ -92,7 +92,7 @@ class DOTAEvaluator:
             model = model_trt
 
         for cur_iter, (imgs, _, info_imgs, ids) in enumerate(
-            progress_bar(self.dataloader)
+                progress_bar(self.dataloader)
         ):
             with torch.no_grad():
                 imgs = imgs.type(tensor_type)
@@ -111,19 +111,19 @@ class DOTAEvaluator:
                     infer_end = time_synchronized()
                     inference_time += infer_end - start
 
-                outputs = outputs.cpu() #add
+                outputs = outputs.cpu()  # add
                 outputs = postprocessobb_kld(
                     outputs, self.num_classes, self.confthre, self.nmsthre
-                ) # # #
+                )  # # #
                 # (x1,y1,x2,y2,x3,y3,x4,y4, score, class_pred)
-                #(x1, y1, x2, y2, x3, y3, x4, y4, conf, class)
-                #(x1, y1, x2, y2, obj_conf, class_conf, class_pred)
+                # (x1, y1, x2, y2, x3, y3, x4, y4, conf, class)
+                # (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
 
                 if is_time_record:
                     nms_end = time_synchronized()
                     nms_time += nms_end - infer_end
 
-                #outputs = outputs.cuda() #add
+                # outputs = outputs.cuda() #add
 
             data_list.update(self.convert_to_voc_format(outputs, info_imgs, ids))
 
@@ -140,12 +140,12 @@ class DOTAEvaluator:
     def convert_to_voc_format(self, outputs, info_imgs, ids):
         predictions = {}
         for (output, img_h, img_w, img_id) in zip(
-            outputs, info_imgs[0], info_imgs[1], ids
+                outputs, info_imgs[0], info_imgs[1], ids
         ):
             if output is None:
                 predictions[int(img_id)] = (None, None, None)
                 continue
-            output = output.cpu() # (x1, y1, x2, y2, x3, y3, x4, y4, score, class)
+            output = output.cpu()  # (x1, y1, x2, y2, x3, y3, x4, y4, score, class)
             bboxes = output[:, 0:8]
 
             # preprocessing: resize
@@ -178,9 +178,9 @@ class DOTAEvaluator:
             [
                 "Average {} time: {:.2f} ms".format(k, v)
                 for k, v in zip(
-                    ["forward", "NMS", "inference"],
-                    [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
-                )
+                ["forward", "NMS", "inference"],
+                [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
+            )
             ]
         )
 
@@ -188,7 +188,7 @@ class DOTAEvaluator:
 
         all_boxes = [
             [[] for _ in range(self.num_images)] for _ in range(self.num_classes)
-        ] # 一个列表包含self.num_classes个中列表， 每个中列表包含self.num_images个小列表
+        ]  # 一个列表包含self.num_classes个中列表， 每个中列表包含self.num_images个小列表
         for img_num in range(self.num_images):
             bboxes, cls, scores = data_dict[img_num]
             if bboxes is None:
@@ -201,7 +201,8 @@ class DOTAEvaluator:
                     all_boxes[j][img_num] = np.empty([0, 9], dtype=np.float32)
                     continue
 
-                c_dets = torch.cat((bboxes, scores.unsqueeze(1)), dim=1) # [[x1, y1, x2, y2, x3, y3, x4, y4, score], ...]
+                c_dets = torch.cat((bboxes, scores.unsqueeze(1)),
+                                   dim=1)  # [[x1, y1, x2, y2, x3, y3, x4, y4, score], ...]
                 all_boxes[j][img_num] = c_dets[mask_c].numpy()
 
             sys.stdout.write(

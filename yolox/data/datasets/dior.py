@@ -15,13 +15,11 @@ import cv2
 import numpy as np
 
 from yolox.evaluators.voc_eval import voc_eval
-
 from .datasets_wrapper import Dataset
 from .dior_classes import VOC_CLASSES
 
 
 class AnnotationTransform(object):
-
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
     Initilized with a dictionary lookup of classnames to indexes
 
@@ -48,9 +46,9 @@ class AnnotationTransform(object):
         """
         res = np.empty((0, 5))
         for obj in target.iter("object"):
-            #difficult = int(obj.find("difficult").text) == 1
-            #if not self.keep_difficult and difficult:
-                #continue
+            # difficult = int(obj.find("difficult").text) == 1
+            # if not self.keep_difficult and difficult:
+            # continue
             name = obj.find("name").text.strip()
             bbox = obj.find("bndbox")
 
@@ -70,7 +68,6 @@ class AnnotationTransform(object):
 
 
 class DIORDetection(Dataset):
-
     """
     VOC Detection Dataset Object
 
@@ -89,13 +86,13 @@ class DIORDetection(Dataset):
     """
 
     def __init__(
-        self,
-        data_dir,
-        image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
-        img_size=(416, 416),
-        preproc=None,
-        target_transform=AnnotationTransform(),
-        dataset_name="VOC0712",
+            self,
+            data_dir,
+            image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
+            img_size=(416, 416),
+            preproc=None,
+            target_transform=AnnotationTransform(),
+            dataset_name="VOC0712",
     ):
         super().__init__(img_size)
         self.root = data_dir
@@ -106,15 +103,15 @@ class DIORDetection(Dataset):
         self.name = dataset_name
         self._annopath = os.path.join("%s", "Annotations", "%s.xml")
         self._imgpath = os.path.join("%s", "JPEGImages", "%s.jpg")
-        if image_sets[0][1] == 'test':#add
-            self._imgpath = os.path.join("%s", "JPEGImages-test", "%s.jpg")#add
+        if image_sets[0][1] == 'test':  # add
+            self._imgpath = os.path.join("%s", "JPEGImages-test", "%s.jpg")  # add
         self._classes = VOC_CLASSES
         self.ids = list()
         for (year, name) in image_sets:
             self._year = year
             rootpath = os.path.join(self.root, "VOC" + year)
             for line in open(
-                os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
+                    os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
             ):
                 self.ids.append((rootpath, line.strip()))
 

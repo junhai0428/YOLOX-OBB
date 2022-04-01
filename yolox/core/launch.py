@@ -6,16 +6,15 @@
 # Copyright (c) Megvii, Inc. and its affiliates.
 
 from datetime import timedelta
-from loguru import logger
 
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
+from loguru import logger
 
 import yolox.utils.dist as comm
 
 __all__ = ["launch"]
-
 
 DEFAULT_TIMEOUT = timedelta(minutes=30)
 
@@ -36,14 +35,14 @@ def _find_free_port():
 
 
 def launch(
-    main_func,
-    num_gpus_per_machine,
-    num_machines=1,
-    machine_rank=0,
-    backend="nccl",
-    dist_url=None,
-    args=(),
-    timeout=DEFAULT_TIMEOUT,
+        main_func,
+        num_gpus_per_machine,
+        num_machines=1,
+        machine_rank=0,
+        backend="nccl",
+        dist_url=None,
+        args=(),
+        timeout=DEFAULT_TIMEOUT,
 ):
     """
     Args:
@@ -79,15 +78,15 @@ def launch(
 
 
 def _distributed_worker(
-    local_rank,
-    main_func,
-    world_size,
-    num_gpus_per_machine,
-    machine_rank,
-    backend,
-    dist_url,
-    args,
-    timeout=DEFAULT_TIMEOUT,
+        local_rank,
+        main_func,
+        world_size,
+        num_gpus_per_machine,
+        machine_rank,
+        backend,
+        dist_url,
+        args,
+        timeout=DEFAULT_TIMEOUT,
 ):
     assert torch.cuda.is_available(), "cuda is not available. Please check your installation."
     global_rank = machine_rank * num_gpus_per_machine + local_rank

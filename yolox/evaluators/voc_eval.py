@@ -20,10 +20,10 @@ def parse_rec(filename):
         obj_struct = {}
         obj_struct["name"] = obj.find("name").text
         obj_struct["pose"] = obj.find("pose").text
-        obj_struct["truncated"] = int(obj.find("truncated").text) #delete
-        obj_struct["difficult"] = int(obj.find("difficult").text) #delete
-        #obj_struct["truncated"] = 0 #add
-        #obj_struct["difficult"] = 0 #add
+        obj_struct["truncated"] = int(obj.find("truncated").text)  # delete
+        obj_struct["difficult"] = int(obj.find("difficult").text)  # delete
+        # obj_struct["truncated"] = 0 #add
+        # obj_struct["difficult"] = 0 #add
         bbox = obj.find("bndbox")
         obj_struct["bbox"] = [
             int(bbox.find("xmin").text),
@@ -71,13 +71,13 @@ def voc_ap(rec, prec, use_07_metric=False):
 
 
 def voc_eval(
-    detpath,
-    annopath,
-    imagesetfile,
-    classname,
-    cachedir,
-    ovthresh=0.5,
-    use_07_metric=False,
+        detpath,
+        annopath,
+        imagesetfile,
+        classname,
+        cachedir,
+        ovthresh=0.5,
+        use_07_metric=False,
 ):
     # first load gt
     if not os.path.isdir(cachedir):
@@ -156,9 +156,9 @@ def voc_eval(
 
             # union
             uni = (
-                (bb[2] - bb[0] + 1.0) * (bb[3] - bb[1] + 1.0)
-                + (BBGT[:, 2] - BBGT[:, 0] + 1.0) * (BBGT[:, 3] - BBGT[:, 1] + 1.0)
-                - inters
+                    (bb[2] - bb[0] + 1.0) * (bb[3] - bb[1] + 1.0)
+                    + (BBGT[:, 2] - BBGT[:, 0] + 1.0) * (BBGT[:, 3] - BBGT[:, 1] + 1.0)
+                    - inters
             )
 
             overlaps = inters / uni

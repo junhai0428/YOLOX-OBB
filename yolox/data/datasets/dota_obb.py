@@ -15,13 +15,11 @@ import cv2
 import numpy as np
 
 from yolox.evaluators.voc_eval import voc_eval
-
 from .datasets_wrapper import Dataset
 from .dota_classes import VOC_CLASSES
 
 
 class AnnotationTransform(object):
-
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
     Initilized with a dictionary lookup of classnames to indexes
 
@@ -72,7 +70,6 @@ class AnnotationTransform(object):
 
 
 class DOTAOBBDetection(Dataset):
-
     """
     VOC Detection Dataset Object
 
@@ -91,13 +88,13 @@ class DOTAOBBDetection(Dataset):
     """
 
     def __init__(
-        self,
-        data_dir,
-        image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
-        img_size=(416, 416),
-        preproc=None,
-        target_transform=AnnotationTransform(),
-        dataset_name="VOC0712",
+            self,
+            data_dir,
+            image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
+            img_size=(416, 416),
+            preproc=None,
+            target_transform=AnnotationTransform(),
+            dataset_name="VOC0712",
     ):
         super().__init__(img_size)
         self.root = data_dir
@@ -108,8 +105,8 @@ class DOTAOBBDetection(Dataset):
         self.name = dataset_name
         self._annopath = os.path.join("%s", "Annotations", "%s.xml")
         self._imgpath = os.path.join("%s", "JPEGImages", "%s.png")
-        if image_sets[0][1] == 'val':#add
-            self._imgpath = os.path.join("%s", "JPEGImages-val", "%s.png")#add
+        if image_sets[0][1] == 'val':  # add
+            self._imgpath = os.path.join("%s", "JPEGImages-val", "%s.png")  # add
         elif image_sets[0][1] == 'test':
             self._imgpath = os.path.join("%s", "JPEGImages-test", "%s.png")  # add
         self._classes = VOC_CLASSES
@@ -118,7 +115,7 @@ class DOTAOBBDetection(Dataset):
             self._year = year
             rootpath = os.path.join(self.root, "VOC" + year)
             for line in open(
-                os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
+                    os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
             ):
                 self.ids.append((rootpath, line.strip()))
 
@@ -131,7 +128,7 @@ class DOTAOBBDetection(Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return target # [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
+        return target  # [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
 
     def pull_item(self, index):
         """Returns the original image and target at an index for mixup
@@ -144,12 +141,12 @@ class DOTAOBBDetection(Dataset):
         Return:
             img, target
         """
-        img_id = self.ids[index] #(rootpath, img_name_without_suffix)
+        img_id = self.ids[index]  # (rootpath, img_name_without_suffix)
         img = cv2.imread(self._imgpath % img_id, cv2.IMREAD_COLOR)
         height, width, _ = img.shape
 
         target = self.load_anno(index)
-        #target = [] #test
+        # target = [] #test
 
         img_info = (height, width)
 
@@ -187,7 +184,7 @@ class DOTAOBBDetection(Dataset):
         """
         self._write_voc_results_file(all_boxes)
 
-        return 0.0, 0.0 #add
+        return 0.0, 0.0  # add
 
         IouTh = np.linspace(0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True)
         mAPs = []
@@ -202,7 +199,7 @@ class DOTAOBBDetection(Dataset):
         return np.mean(mAPs), mAPs[0]
 
     def _get_voc_results_file_template(self):
-        filename ="{:s}.txt"
+        filename = "{:s}.txt"
         filedir = os.path.join(self.root, "results", "VOC" + self._year, "Main")
         if not os.path.exists(filedir):
             os.makedirs(filedir)
@@ -219,7 +216,7 @@ class DOTAOBBDetection(Dataset):
             with open(filename, "wt") as f:
                 for im_ind, index in enumerate(self.ids):
                     index = index[1]
-                    dets = all_boxes[cls_ind][im_ind] # [x1, y1, x2, y2, x3, y3, x4, y4, score]
+                    dets = all_boxes[cls_ind][im_ind]  # [x1, y1, x2, y2, x3, y3, x4, y4, score]
                     if dets == []:
                         continue
                     for k in range(dets.shape[0]):

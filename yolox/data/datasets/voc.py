@@ -15,13 +15,11 @@ import cv2
 import numpy as np
 
 from yolox.evaluators.voc_eval import voc_eval
-
 from .datasets_wrapper import Dataset
 from .voc_classes import VOC_CLASSES
 
 
 class AnnotationTransform(object):
-
     """Transforms a VOC annotation into a Tensor of bbox coords and label index
     Initilized with a dictionary lookup of classnames to indexes
 
@@ -70,7 +68,6 @@ class AnnotationTransform(object):
 
 
 class VOCDetection(Dataset):
-
     """
     VOC Detection Dataset Object
 
@@ -89,13 +86,13 @@ class VOCDetection(Dataset):
     """
 
     def __init__(
-        self,
-        data_dir,
-        image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
-        img_size=(416, 416),
-        preproc=None,
-        target_transform=AnnotationTransform(),
-        dataset_name="VOC0712",
+            self,
+            data_dir,
+            image_sets=[('2007', 'trainval'), ('2012', 'trainval')],
+            img_size=(416, 416),
+            preproc=None,
+            target_transform=AnnotationTransform(),
+            dataset_name="VOC0712",
     ):
         super().__init__(img_size)
         self.root = data_dir
@@ -112,7 +109,7 @@ class VOCDetection(Dataset):
             self._year = year
             rootpath = os.path.join(self.root, "VOC" + year)
             for line in open(
-                os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
+                    os.path.join(rootpath, "ImageSets", "Main", name + ".txt")
             ):
                 self.ids.append((rootpath, line.strip()))
 

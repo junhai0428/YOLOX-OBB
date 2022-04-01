@@ -17,7 +17,6 @@ __all__ = [
 
 
 def get_model_info(model, tsize):
-
     stride = 64
     img = torch.zeros((1, 3, stride, stride), device=next(model.parameters()).device)
     flops, params = profile(deepcopy(model), inputs=(img,), verbose=False)
@@ -40,8 +39,8 @@ def fuse_conv_and_bn(conv, bn):
             groups=conv.groups,
             bias=True,
         )
-        .requires_grad_(False)
-        .to(conv.weight.device)
+            .requires_grad_(False)
+            .to(conv.weight.device)
     )
 
     # prepare filters

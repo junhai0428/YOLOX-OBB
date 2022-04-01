@@ -7,7 +7,6 @@ import time
 from collections import defaultdict, deque
 
 import numpy as np
-
 import torch
 
 __all__ = [

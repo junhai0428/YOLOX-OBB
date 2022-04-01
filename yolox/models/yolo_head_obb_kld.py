@@ -3,30 +3,27 @@
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
 
 import math
-from loguru import logger
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from loguru import logger
 
-#from yolox.utils import bboxes_iou
+# from yolox.utils import bboxes_iou
 from yolox.models import compute_kld_loss, KLDloss
-
-#from .losses import IOUloss
+# from .losses import IOUloss
 from .network_blocks import BaseConv, DWConv
-
-
 
 
 class YOLOXHeadOBB_KLD(nn.Module):
     def __init__(
-        self,
-        num_classes,
-        width=1.0,
-        strides=[8, 16, 32],
-        in_channels=[256, 512, 1024],
-        act="silu",
-        depthwise=False,
+            self,
+            num_classes,
+            width=1.0,
+            strides=[8, 16, 32],
+            in_channels=[256, 512, 1024],
+            act="silu",
+            depthwise=False,
     ):
         """
         Args:
@@ -135,7 +132,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
                 )
             )
 
-        self.use_l1 = False # default False
+        self.use_l1 = False  # default False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = KLDloss()
@@ -159,7 +156,6 @@ class YOLOXHeadOBB_KLD(nn.Module):
             b.data.fill_(-math.log((1 - prior_prob) / prior_prob))
             conv.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
-
     def forward(self, xin, labels=None, imgs=None):
         outputs = []
         origin_preds = []
@@ -168,7 +164,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
         expanded_strides = []
 
         for k, (cls_conv, reg_conv, stride_this_level, x) in enumerate(
-            zip(self.cls_convs, self.reg_convs, self.strides, xin)
+                zip(self.cls_convs, self.reg_convs, self.strides, xin)
         ):
             x = self.stems[k](x)
             cls_x = x
@@ -182,21 +178,20 @@ class YOLOXHeadOBB_KLD(nn.Module):
             obj_output = self.obj_preds[k](reg_feat)
             angle_output = self.angle_preds[k](reg_feat)
 
-
             if self.training:
-                #output = torch.cat([reg_output, obj_output, cls_output], 1) #output中中心坐标和宽高都是未解码前的tx,ty,tw,th
-                output = torch.cat([reg_output, angle_output, obj_output, cls_output], 1) #加上角度信息
+                # output = torch.cat([reg_output, obj_output, cls_output], 1) #output中中心坐标和宽高都是未解码前的tx,ty,tw,th
+                output = torch.cat([reg_output, angle_output, obj_output, cls_output], 1)  # 加上角度信息
                 output, grid = self.get_output_and_grid(
                     output, k, stride_this_level, xin[0].type())
-                    # grid: shape(1, hsize * wsize, 2)   output: (batch_size, self.n_anchors * hsize * wsize, 5 + 1 + 80)
-                    # output中中心坐标和宽高都是解码后的相对于的图片大小
+                # grid: shape(1, hsize * wsize, 2)   output: (batch_size, self.n_anchors * hsize * wsize, 5 + 1 + 80)
+                # output中中心坐标和宽高都是解码后的相对于的图片大小
                 x_shifts.append(grid[:, :, 0])
                 y_shifts.append(grid[:, :, 1])
                 expanded_strides.append(
                     torch.zeros(1, grid.shape[1])
-                    .fill_(stride_this_level)
-                    .type_as(xin[0])
-                ) # expanded_strides的一个元素: (1, hsize * wsize)
+                        .fill_(stride_this_level)
+                        .type_as(xin[0])
+                )  # expanded_strides的一个元素: (1, hsize * wsize)
                 if self.use_l1:
                     batch_size = reg_output.shape[0]
                     hsize, wsize = reg_output.shape[-2:]
@@ -240,7 +235,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
             ).permute(0, 2, 1)
             # [batch, n_anchors_all, 5 + 1 +  80]
             if self.decode_in_inference:
-                return self.decode_outputs(outputs, dtype=xin[0].type()) #tuili
+                return self.decode_outputs(outputs, dtype=xin[0].type())  # tuili
             else:
                 return outputs
 
@@ -259,10 +254,10 @@ class YOLOXHeadOBB_KLD(nn.Module):
         output = output.permute(0, 1, 3, 4, 2).reshape(
             batch_size, self.n_anchors * hsize * wsize, -1
         )
-        grid = grid.view(1, -1, 2) # grid: shape(1, hsize * wsize, 2)
+        grid = grid.view(1, -1, 2)  # grid: shape(1, hsize * wsize, 2)
         output[..., :2] = (output[..., :2] + grid) * stride
         output[..., 2:4] = torch.exp(output[..., 2:4]) * stride
-        output[..., 4] = (output[..., 4].sigmoid() - 0.5) * 180 #add
+        output[..., 4] = (output[..., 4].sigmoid() - 0.5) * 180  # add
         return output, grid
 
     def decode_outputs(self, outputs, dtype):
@@ -284,31 +279,29 @@ class YOLOXHeadOBB_KLD(nn.Module):
         return outputs
 
     def get_losses(
-        self,
-        imgs,
-        x_shifts,
-        y_shifts,
-        expanded_strides,
-        labels, # [[label_id, c_x, c_y, w, h, angle], ...]
-        outputs,
-        origin_preds,
-        dtype,
+            self,
+            imgs,
+            x_shifts,
+            y_shifts,
+            expanded_strides,
+            labels,  # [[label_id, c_x, c_y, w, h, angle], ...]
+            outputs,
+            origin_preds,
+            dtype,
     ):
 
-
-        bbox_preds_with_angle = outputs[:, :, :5] # [batch, n_anchors_all, 5]
+        bbox_preds_with_angle = outputs[:, :, :5]  # [batch, n_anchors_all, 5]
         bbox_preds = outputs[:, :, :4]  # [batch, n_anchors_all, 4]
         angle_preds = outputs[:, :, 4]  # [batch, n_anchors_all, 1]
         obj_preds = outputs[:, :, 5].unsqueeze(-1)  # [batch, n_anchors_all, 1]
         cls_preds = outputs[:, :, 6:]  # [batch, n_anchors_all, n_cls]
 
-        mixup = labels.shape[2] > 6 #default 5
+        mixup = labels.shape[2] > 6  # default 5
         if mixup:
-            label_cut = labels[..., :6] #default 5
+            label_cut = labels[..., :6]  # default 5
         else:
             label_cut = labels
         nlabel = (label_cut.sum(dim=2) > 0).sum(dim=1)  # number of objects
-
 
         total_num_anchors = outputs.shape[1]
         x_shifts = torch.cat(x_shifts, 1)  # [1, n_anchors_all]
@@ -333,7 +326,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
                 reg_target = outputs.new_zeros((0, 4))
-                angle_target = outputs.new_zeros(0) #add
+                angle_target = outputs.new_zeros(0)  # add
                 l1_target = outputs.new_zeros((0, 4))
                 obj_target = outputs.new_zeros((total_num_anchors, 1))
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
@@ -343,7 +336,6 @@ class YOLOXHeadOBB_KLD(nn.Module):
                 gt_classes = labels[batch_idx, :num_gt, 0]
                 bboxes_preds_per_image = bbox_preds[batch_idx]
                 angles_preds_per_image = angle_preds[batch_idx]
-
 
                 try:
                     (
@@ -358,9 +350,9 @@ class YOLOXHeadOBB_KLD(nn.Module):
                         total_num_anchors,
                         gt_bboxes_per_image,
                         gt_classes,
-                        gt_angles_per_image, #add
+                        gt_angles_per_image,  # add
                         bboxes_preds_per_image,
-                        angles_preds_per_image, #add
+                        angles_preds_per_image,  # add
                         expanded_strides,
                         x_shifts,
                         y_shifts,
@@ -408,14 +400,13 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
                 cls_target = F.one_hot(
                     gt_matched_classes.to(torch.int64), self.num_classes
-                ) * pred_ious_this_matching.unsqueeze(-1) # (n_anchor_select_final, 80)
+                ) * pred_ious_this_matching.unsqueeze(-1)  # (n_anchor_select_final, 80)
 
-                obj_target = fg_mask.unsqueeze(-1) # （n_anchor_select_final, 1）
+                obj_target = fg_mask.unsqueeze(-1)  # （n_anchor_select_final, 1）
 
-                reg_target = gt_bboxes_per_image[matched_gt_inds] #(n_anchor_select_final, 4)
+                reg_target = gt_bboxes_per_image[matched_gt_inds]  # (n_anchor_select_final, 4)
 
-                angle_target = gt_angles_per_image[matched_gt_inds] #add  （n_anchor_select_final）
-
+                angle_target = gt_angles_per_image[matched_gt_inds]  # add  （n_anchor_select_final）
 
                 if self.use_l1:
                     l1_target = self.get_l1_target(
@@ -428,7 +419,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
             cls_targets.append(cls_target)
             reg_targets.append(reg_target)
-            angle_targets.append(angle_target) #add
+            angle_targets.append(angle_target)  # add
             obj_targets.append(obj_target.to(dtype))
             fg_masks.append(fg_mask)
             if self.use_l1:
@@ -436,7 +427,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
         cls_targets = torch.cat(cls_targets, 0)
         reg_targets = torch.cat(reg_targets, 0)
-        angle_targets = torch.cat(angle_targets, 0) #add (n_anchor_select_final)
+        angle_targets = torch.cat(angle_targets, 0)  # add (n_anchor_select_final)
         obj_targets = torch.cat(obj_targets, 0)
         fg_masks = torch.cat(fg_masks, 0)
         reg_targets_with_angle = torch.cat((reg_targets, angle_targets.unsqueeze(-1)), dim=1)
@@ -445,21 +436,21 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(reg_targets_with_angle, bbox_preds_with_angle.view(-1, 5)[fg_masks])
-        ).sum() / num_fg
+                       self.iou_loss(reg_targets_with_angle, bbox_preds_with_angle.view(-1, 5)[fg_masks])
+                   ).sum() / num_fg
         loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
+                       self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+                   ).sum() / num_fg
         loss_cls = (
-            self.bcewithlog_loss(
-                cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
-            )
-        ).sum() / num_fg
+                       self.bcewithlog_loss(
+                           cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                       )
+                   ).sum() / num_fg
 
         if self.use_l1:
             loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-            ).sum() / num_fg
+                          self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                      ).sum() / num_fg
         else:
             loss_l1 = 0.0
 
@@ -468,7 +459,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
         return (
             loss,
-            reg_weight * loss_iou, #reg_weight * loss_iou,
+            reg_weight * loss_iou,  # reg_weight * loss_iou,
             loss_obj,
             loss_cls,
             loss_l1,
@@ -484,24 +475,24 @@ class YOLOXHeadOBB_KLD(nn.Module):
 
     @torch.no_grad()
     def get_assignments(
-        self,
-        batch_idx,
-        num_gt,
-        total_num_anchors,
-        gt_bboxes_per_image,
-        gt_classes,
-        gt_angles_per_image,
-        bboxes_preds_per_image,
-        angle_preds_per_image,  # add
-        expanded_strides,
-        x_shifts,
-        y_shifts,
-        cls_preds,
-        bbox_preds,
-        obj_preds,
-        labels,
-        imgs,
-        mode="gpu", #'gpu'
+            self,
+            batch_idx,
+            num_gt,
+            total_num_anchors,
+            gt_bboxes_per_image,
+            gt_classes,
+            gt_angles_per_image,
+            bboxes_preds_per_image,
+            angle_preds_per_image,  # add
+            expanded_strides,
+            x_shifts,
+            y_shifts,
+            cls_preds,
+            bbox_preds,
+            obj_preds,
+            labels,
+            imgs,
+            mode="gpu",  # 'gpu'
     ):
 
         if mode == "cpu":
@@ -509,7 +500,7 @@ class YOLOXHeadOBB_KLD(nn.Module):
             gt_bboxes_per_image = gt_bboxes_per_image.cpu().float()
             gt_angles_per_image = gt_angles_per_image.cpu().float()  # add
             bboxes_preds_per_image = bboxes_preds_per_image.cpu().float()
-            angle_preds_per_image = angle_preds_per_image.cpu().float() #add
+            angle_preds_per_image = angle_preds_per_image.cpu().float()  # add
             gt_classes = gt_classes.cpu().float()
             expanded_strides = expanded_strides.cpu().float()
             x_shifts = x_shifts.cpu()
@@ -522,62 +513,55 @@ class YOLOXHeadOBB_KLD(nn.Module):
             y_shifts,
             total_num_anchors,
             num_gt,
-        ) # fg_mask shape (n_anchor)   is_in_boxes_and_center shape (n_gt, n_anchor_select)
+        )  # fg_mask shape (n_anchor)   is_in_boxes_and_center shape (n_gt, n_anchor_select)
 
-        bboxes_preds_per_image = bboxes_preds_per_image[fg_mask] # shape: (n_anchor_select, 4)
+        bboxes_preds_per_image = bboxes_preds_per_image[fg_mask]  # shape: (n_anchor_select, 4)
         angle_preds_per_image = angle_preds_per_image[fg_mask]  # shape: (n_anchor_select)
 
-        cls_preds_ = cls_preds[batch_idx][fg_mask] # shape: (n_anchor_select, 80)
-        obj_preds_ = obj_preds[batch_idx][fg_mask] # shape: (n_anchor_select, 1)
+        cls_preds_ = cls_preds[batch_idx][fg_mask]  # shape: (n_anchor_select, 80)
+        obj_preds_ = obj_preds[batch_idx][fg_mask]  # shape: (n_anchor_select, 1)
 
         num_in_boxes_anchor = bboxes_preds_per_image.shape[0]
 
-
         gt_bboxes_per_image_with_angle = torch.cat((gt_bboxes_per_image, gt_angles_per_image.unsqueeze(1)), dim=1)
-        bboxes_preds_per_image_with_angle = torch.cat((bboxes_preds_per_image, angle_preds_per_image.unsqueeze(1)), dim=1)
-
+        bboxes_preds_per_image_with_angle = torch.cat((bboxes_preds_per_image, angle_preds_per_image.unsqueeze(1)),
+                                                      dim=1)
 
         if mode == "cpu":
             gt_bboxes_per_image_with_angle = gt_bboxes_per_image_with_angle.cpu()
             bboxes_preds_per_image_with_angle = bboxes_preds_per_image_with_angle.cpu()
 
-
-        pair_wise_ious_loss = compute_kld_loss(gt_bboxes_per_image_with_angle, bboxes_preds_per_image_with_angle) #add
+        pair_wise_ious_loss = compute_kld_loss(gt_bboxes_per_image_with_angle, bboxes_preds_per_image_with_angle)  # add
         pair_wise_iou_approximate = 1.0 - pair_wise_ious_loss
-
-
 
         gt_cls_per_image = (
             F.one_hot(gt_classes.to(torch.int64), self.num_classes)
-            .float()
-            .unsqueeze(1)
-            .repeat(1, num_in_boxes_anchor, 1)
-        ) # gt_cls_per_image shape: (n_gt, n_anchor_select, n_class)
-
-
+                .float()
+                .unsqueeze(1)
+                .repeat(1, num_in_boxes_anchor, 1)
+        )  # gt_cls_per_image shape: (n_gt, n_anchor_select, n_class)
 
         if mode == "cpu":
             cls_preds_, obj_preds_ = cls_preds_.cpu(), obj_preds_.cpu()
-            #angle_preds_per_image_ = angle_preds_per_image_.cpu()
+            # angle_preds_per_image_ = angle_preds_per_image_.cpu()
 
         cls_preds_ = (
-            cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
-            * obj_preds_.unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
-        ) # cls_preds_ shape: (n_gt, n_anchor_select, n_class)
+                cls_preds_.float().unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+                * obj_preds_.unsqueeze(0).repeat(num_gt, 1, 1).sigmoid_()
+        )  # cls_preds_ shape: (n_gt, n_anchor_select, n_class)
 
         # print("yolo_head_obb.py line 588")
         # print('cls_preds_ shape is {}'.format(cls_preds_.shape))
 
         pair_wise_cls_loss = F.binary_cross_entropy(
             cls_preds_.sqrt_(), gt_cls_per_image, reduction="none"
-        ).sum(-1) # cls_preds_ shape: (n_gt, n_anchor_select)
+        ).sum(-1)  # cls_preds_ shape: (n_gt, n_anchor_select)
         del cls_preds_
 
-
         cost = (
-            pair_wise_cls_loss
-            + 3.0 * pair_wise_ious_loss
-            + 100000.0 * (~is_in_boxes_and_center) # 让中心不在标注框里或者中心不在5*5方格里的锚框cost值很大
+                pair_wise_cls_loss
+                + 3.0 * pair_wise_ious_loss
+                + 100000.0 * (~is_in_boxes_and_center)  # 让中心不在标注框里或者中心不在5*5方格里的锚框cost值很大
         )
 
         (
@@ -603,61 +587,61 @@ class YOLOXHeadOBB_KLD(nn.Module):
         )
 
     def get_in_boxes_info(
-        self,
-        gt_bboxes_per_image, # shape（num_gt, 4）
-        expanded_strides, # shape（1, n_anchors_all）
-        x_shifts, # shape（1, n_anchors_all）
-        y_shifts, # shape（1, n_anchors_all）
-        total_num_anchors,
-        num_gt,
+            self,
+            gt_bboxes_per_image,  # shape（num_gt, 4）
+            expanded_strides,  # shape（1, n_anchors_all）
+            x_shifts,  # shape（1, n_anchors_all）
+            y_shifts,  # shape（1, n_anchors_all）
+            total_num_anchors,
+            num_gt,
     ):
         expanded_strides_per_image = expanded_strides[0]
         x_shifts_per_image = x_shifts[0] * expanded_strides_per_image
         y_shifts_per_image = y_shifts[0] * expanded_strides_per_image
         x_centers_per_image = (
             (x_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )  # [n_anchor] -> [n_gt, n_anchor]
         y_centers_per_image = (
             (y_shifts_per_image + 0.5 * expanded_strides_per_image)
-            .unsqueeze(0)
-            .repeat(num_gt, 1)
+                .unsqueeze(0)
+                .repeat(num_gt, 1)
         )
 
-        gt_ws_per_image = gt_bboxes_per_image[:, 2] #add
-        gt_hs_per_image = gt_bboxes_per_image[:, 3] #add
-        max_hs_ws = torch.where(gt_ws_per_image>=gt_hs_per_image, gt_ws_per_image, gt_hs_per_image)
+        gt_ws_per_image = gt_bboxes_per_image[:, 2]  # add
+        gt_hs_per_image = gt_bboxes_per_image[:, 3]  # add
+        max_hs_ws = torch.where(gt_ws_per_image >= gt_hs_per_image, gt_ws_per_image, gt_hs_per_image)
 
         gt_bboxes_per_image_l = (
             (gt_bboxes_per_image[:, 0] - 0.5 * max_hs_ws[:])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors) # [n_gt] -> [n_gt, n_anchor] 应该是
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)  # [n_gt] -> [n_gt, n_anchor] 应该是
         )
         gt_bboxes_per_image_r = (
             (gt_bboxes_per_image[:, 0] + 0.5 * max_hs_ws[:])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
         gt_bboxes_per_image_t = (
             (gt_bboxes_per_image[:, 1] - 0.5 * max_hs_ws[:])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
         gt_bboxes_per_image_b = (
             (gt_bboxes_per_image[:, 1] + 0.5 * max_hs_ws[:])
-            .unsqueeze(1)
-            .repeat(1, total_num_anchors)
+                .unsqueeze(1)
+                .repeat(1, total_num_anchors)
         )
 
         b_l = x_centers_per_image - gt_bboxes_per_image_l
         b_r = gt_bboxes_per_image_r - x_centers_per_image
         b_t = y_centers_per_image - gt_bboxes_per_image_t
         b_b = gt_bboxes_per_image_b - y_centers_per_image
-        bbox_deltas = torch.stack([b_l, b_t, b_r, b_b], 2) # shape （n_gt, n_anchor, 4）
+        bbox_deltas = torch.stack([b_l, b_t, b_r, b_b], 2)  # shape （n_gt, n_anchor, 4）
 
-        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0 # shape (n_gt, n_anchor)
-        is_in_boxes_all = is_in_boxes.sum(dim=0) > 0 # shape (n_anchor) 中心点位于标注框内的锚框为True
+        is_in_boxes = bbox_deltas.min(dim=-1).values > 0.0  # shape (n_gt, n_anchor)
+        is_in_boxes_all = is_in_boxes.sum(dim=0) > 0  # shape (n_anchor) 中心点位于标注框内的锚框为True
         # in fixed center
 
         center_radius = 2.5
@@ -687,16 +671,16 @@ class YOLOXHeadOBB_KLD(nn.Module):
         is_in_boxes_anchor = is_in_boxes_all | is_in_centers_all
 
         is_in_boxes_and_center = (
-            is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
+                is_in_boxes[:, is_in_boxes_anchor] & is_in_centers[:, is_in_boxes_anchor]
         )
         return is_in_boxes_anchor, is_in_boxes_and_center
 
     def dynamic_k_matching(self, cost, pair_wise_ious, gt_classes, num_gt, fg_mask):
         # Dynamic K
         # ---------------------------------------------------------------
-        matching_matrix = torch.zeros_like(cost) # shape (n_gt, n_anchor_select)
+        matching_matrix = torch.zeros_like(cost)  # shape (n_gt, n_anchor_select)
 
-        ious_in_boxes_matrix = pair_wise_ious # shape (n_gt, n_anchor_select)
+        ious_in_boxes_matrix = pair_wise_ious  # shape (n_gt, n_anchor_select)
         n_candidate_k = min(10, ious_in_boxes_matrix.size(1))
         topk_ious, _ = torch.topk(ious_in_boxes_matrix, n_candidate_k, dim=1)
 
@@ -719,14 +703,14 @@ class YOLOXHeadOBB_KLD(nn.Module):
             matching_matrix[:, anchor_matching_gt > 1] *= 0.0
             matching_matrix[cost_argmin, anchor_matching_gt > 1] = 1.0
         fg_mask_inboxes = matching_matrix.sum(0) > 0.0
-        num_fg = fg_mask_inboxes.sum().item() # 被匹配上的预测框的数量
+        num_fg = fg_mask_inboxes.sum().item()  # 被匹配上的预测框的数量
 
-        fg_mask[fg_mask.clone()] = fg_mask_inboxes # shape (n_anchor) 被挑选的预测框对应的位置赋值为True
+        fg_mask[fg_mask.clone()] = fg_mask_inboxes  # shape (n_anchor) 被挑选的预测框对应的位置赋值为True
 
         matched_gt_inds = matching_matrix[:, fg_mask_inboxes].argmax(0)
-        gt_matched_classes = gt_classes[matched_gt_inds] #被匹配上的预测框的类别 shape（num_fg）
+        gt_matched_classes = gt_classes[matched_gt_inds]  # 被匹配上的预测框的类别 shape（num_fg）
 
         pred_ious_this_matching = (matching_matrix * pair_wise_ious).sum(0)[
             fg_mask_inboxes
-        ] # 被匹配上的预测框和标注框的iou shape（num_fg）
+        ]  # 被匹配上的预测框和标注框的iou shape（num_fg）
         return num_fg, gt_matched_classes, pred_ious_this_matching, matched_gt_inds

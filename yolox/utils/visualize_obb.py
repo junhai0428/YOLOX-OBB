@@ -9,7 +9,6 @@ __all__ = ["visobb"]
 
 
 def visobb(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
-
     for i in range(len(boxes)):
         box = boxes[i]
         cls_id = int(cls_ids[i])
@@ -39,13 +38,13 @@ def visobb(img, boxes, scores, cls_ids, conf=0.5, class_names=None):
         cv2.line(img, (x2, y2), (x3, y3), color, 2, cv2.LINE_AA)
         cv2.line(img, (x3, y3), (x4, y4), color, 2, cv2.LINE_AA)
         cv2.line(img, (x4, y4), (x1, y1), color, 2, cv2.LINE_AA)
-        #cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
+        # cv2.rectangle(img, (x0, y0), (x1, y1), color, 2)
 
         txt_bk_color = (_COLORS[cls_id] * 255 * 0.7).astype(np.uint8).tolist()
         cv2.rectangle(
             img,
             (x1, y1 + 1),
-            (x1 + txt_size[0] + 1, y1 + int(1.5*txt_size[1])),
+            (x1 + txt_size[0] + 1, y1 + int(1.5 * txt_size[1])),
             txt_bk_color,
             -1
         )

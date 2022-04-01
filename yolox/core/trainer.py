@@ -5,11 +5,11 @@
 import datetime
 import os
 import time
-from loguru import logger
 
 import apex
 import torch
 from apex import amp
+from loguru import logger
 from torch.utils.tensorboard import SummaryWriter
 
 from yolox.data import DataPrefetcher
@@ -109,26 +109,26 @@ class Trainer:
         l1_loss = outputs["l1_loss"]
         conf_loss = outputs["conf_loss"]
         cls_loss = outputs["cls_loss"]
-        #add
+        # add
         if self.rank == 0:
-            if (self.progress_in_iter+1) % 10 == 0:
-                self.tblogger.add_scalar("train/total_loss", self.total_loss_iter/10, self.progress_in_iter+1)
+            if (self.progress_in_iter + 1) % 10 == 0:
+                self.tblogger.add_scalar("train/total_loss", self.total_loss_iter / 10, self.progress_in_iter + 1)
                 self.tblogger.add_scalar("train/iou_loss", self.iou_loss_iter / 10, self.progress_in_iter + 1)
-                self.tblogger.add_scalar("train/l1_loss", self.l1_loss_iter / 10, self.progress_in_iter + 1)
+                # self.tblogger.add_scalar("train/l1_loss", self.l1_loss_iter / 10, self.progress_in_iter + 1)
                 self.tblogger.add_scalar("train/conf_loss", self.conf_loss_iter / 10, self.progress_in_iter + 1)
                 self.tblogger.add_scalar("train/cls_loss", self.cls_loss_iter / 10, self.progress_in_iter + 1)
                 self.total_loss_iter = 0.0
                 self.iou_loss_iter = 0.0
-                self.l1_loss_iter = 0.0
+                # self.l1_loss_iter = 0.0
                 self.conf_loss_iter = 0.0
                 self.cls_loss_iter = 0.0
             else:
                 self.total_loss_iter = self.total_loss_iter + loss.detach()
                 self.iou_loss_iter = self.iou_loss_iter + iou_loss.detach()
-                #self.l1_loss_iter = self.l1_loss_iter + l1_loss.detach()
+                # self.l1_loss_iter = self.l1_loss_iter + l1_loss.detach()
                 self.conf_loss_iter = self.conf_loss_iter + conf_loss.detach()
                 self.cls_loss_iter = self.cls_loss_iter + cls_loss.detach()
-        #add
+        # add
 
         self.optimizer.zero_grad()
         if self.amp_training:
@@ -357,9 +357,9 @@ class Trainer:
             save_model = self.ema_model.ema if self.use_model_ema else self.model
             logger.info("Save weights to {}".format(self.file_name))
             ckpt_state = {
-                "start_epoch": self.epoch + 1,
+                # "start_epoch": self.epoch + 1,
                 "model": save_model.state_dict(),
-                "optimizer": self.optimizer.state_dict(),
+                # "optimizer": self.optimizer.state_dict(),
             }
             if self.amp_training:
                 # save amp state according to

@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 
+
 class KLDloss(nn.Module):
     def __init__(self, taf=1.0, reduction="none"):
         super(KLDloss, self).__init__()
         self.reduction = reduction
         self.taf = taf
 
-    def forward(self, pred, target): # pred [[x,y,w,h,angle], ...]
+    def forward(self, pred, target):  # pred [[x,y,w,h,angle], ...]
         assert pred.shape[0] == target.shape[0]
 
         pred = pred.view(-1, 5)
@@ -19,21 +20,29 @@ class KLDloss(nn.Module):
         targrt_angle_radian = 3.141592653589793 * target[:, 4] / 180.0
         delta_angle_radian = pre_angle_radian - targrt_angle_radian
 
-        kld =  0.5 * (
-                        4 * torch.pow( ( delta_x.mul(torch.cos(targrt_angle_radian)) + delta_y.mul(torch.sin(targrt_angle_radian)) ), 2) / torch.pow(target[:, 2], 2)
-                      + 4 * torch.pow( ( delta_y.mul(torch.cos(targrt_angle_radian)) - delta_x.mul(torch.sin(targrt_angle_radian)) ), 2) / torch.pow(target[:, 3], 2)
-                     )\
-             + 0.5 * (
-                        torch.pow(pred[:, 3], 2) / torch.pow(target[:, 2], 2) * torch.pow(torch.sin(delta_angle_radian), 2)
-                      + torch.pow(pred[:, 2], 2) / torch.pow(target[:, 3], 2) * torch.pow(torch.sin(delta_angle_radian), 2)
-                      + torch.pow(pred[:, 3], 2) / torch.pow(target[:, 3], 2) * torch.pow(torch.cos(delta_angle_radian), 2)
-                      + torch.pow(pred[:, 2], 2) / torch.pow(target[:, 2], 2) * torch.pow(torch.cos(delta_angle_radian), 2)
-                     )\
-             + 0.5 * (
-                        torch.log(torch.pow(target[:, 3], 2) / torch.pow(pred[:, 3], 2))
+        kld = 0.5 * (
+                4 * torch.pow(
+            (delta_x.mul(torch.cos(targrt_angle_radian)) + delta_y.mul(torch.sin(targrt_angle_radian))), 2) / torch.pow(
+            target[:, 2], 2)
+                + 4 * torch.pow(
+            (delta_y.mul(torch.cos(targrt_angle_radian)) - delta_x.mul(torch.sin(targrt_angle_radian))), 2) / torch.pow(
+            target[:, 3], 2)
+        ) \
+              + 0.5 * (
+                      torch.pow(pred[:, 3], 2) / torch.pow(target[:, 2], 2) * torch.pow(torch.sin(delta_angle_radian),
+                                                                                        2)
+                      + torch.pow(pred[:, 2], 2) / torch.pow(target[:, 3], 2) * torch.pow(torch.sin(delta_angle_radian),
+                                                                                          2)
+                      + torch.pow(pred[:, 3], 2) / torch.pow(target[:, 3], 2) * torch.pow(torch.cos(delta_angle_radian),
+                                                                                          2)
+                      + torch.pow(pred[:, 2], 2) / torch.pow(target[:, 2], 2) * torch.pow(torch.cos(delta_angle_radian),
+                                                                                          2)
+              ) \
+              + 0.5 * (
+                      torch.log(torch.pow(target[:, 3], 2) / torch.pow(pred[:, 3], 2))
                       + torch.log(torch.pow(target[:, 2], 2) / torch.pow(pred[:, 2], 2))
-                     )\
-             - 1.0
+              ) \
+              - 1.0
 
         kld_loss = 1 - 1 / (self.taf + torch.log(kld + 1))
 

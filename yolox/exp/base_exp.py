@@ -6,9 +6,9 @@ import ast
 import pprint
 from abc import ABCMeta, abstractmethod
 from typing import Dict
-from tabulate import tabulate
 
 import torch
+from tabulate import tabulate
 from torch.nn import Module
 
 from yolox.utils import LRScheduler
@@ -29,7 +29,7 @@ class BaseExp(metaclass=ABCMeta):
 
     @abstractmethod
     def get_data_loader(
-        self, batch_size: int, is_distributed: bool
+            self, batch_size: int, is_distributed: bool
     ) -> Dict[str, torch.utils.data.DataLoader]:
         pass
 
@@ -39,7 +39,7 @@ class BaseExp(metaclass=ABCMeta):
 
     @abstractmethod
     def get_lr_scheduler(
-        self, lr: float, iters_per_epoch: int, **kwargs
+            self, lr: float, iters_per_epoch: int, **kwargs
     ) -> LRScheduler:
         pass
 

@@ -7,4 +7,3 @@ from .build import get_exp
 from .yolox_base import Exp
 
 from .yolox_base_obb_kld import ExpOBB_KLD
-

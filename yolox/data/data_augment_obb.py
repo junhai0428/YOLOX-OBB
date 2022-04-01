@@ -42,22 +42,22 @@ def box_candidates(box1, box2, wh_thr=2, ar_thr=20, area_thr=0.2):
     w2, h2 = box2[2] - box2[0], box2[3] - box2[1]
     ar = np.maximum(w2 / (h2 + 1e-16), h2 / (w2 + 1e-16))  # aspect ratio
     return (
-        (w2 > wh_thr)
-        & (h2 > wh_thr)
-        & (w2 * h2 / (w1 * h1 + 1e-16) > area_thr)
-        & (ar < ar_thr)
+            (w2 > wh_thr)
+            & (h2 > wh_thr)
+            & (w2 * h2 / (w1 * h1 + 1e-16) > area_thr)
+            & (ar < ar_thr)
     )  # candidates
 
 
 def random_perspective(
-    img,
-    targets=(),
-    degrees=0.0,
-    translate=0.1,
-    scale=0.1,
-    shear=10,
-    perspective=0.0,
-    border=(0, 0),
+        img,
+        targets=(),
+        degrees=0.0,
+        translate=0.1,
+        scale=0.1,
+        shear=10,
+        perspective=0.0,
+        border=(0, 0),
 ):
     # targets = [cls, xyxy]
     height = img.shape[0] + border[0] * 2  # shape(h,w,c)
@@ -84,10 +84,10 @@ def random_perspective(
     # Translation
     T = np.eye(3)
     T[0, 2] = (
-        random.uniform(0.5 - translate, 0.5 + translate) * width
+            random.uniform(0.5 - translate, 0.5 + translate) * width
     )  # x translation (pixels)
     T[1, 2] = (
-        random.uniform(0.5 - translate, 0.5 + translate) * height
+            random.uniform(0.5 - translate, 0.5 + translate) * height
     )  # y translation (pixels)
 
     # Combined rotation matrix
@@ -170,7 +170,7 @@ def _distort(image):
     return image
 
 
-def _mirror(image, boxes): #水平翻转
+def _mirror(image, boxes):  # 水平翻转
     _, width, _ = image.shape
     if random.randrange(2):
         image = image[:, ::-1]
@@ -178,7 +178,8 @@ def _mirror(image, boxes): #水平翻转
         boxes[:, 0::2] = width - boxes[:, 2::-2]
     return image, boxes
 
-def _flip_h(image, boxes, angles): #水平翻转
+
+def _flip_h(image, boxes, angles):  # 水平翻转
     _, width, _ = image.shape
     if random.randrange(2):
         image = image[:, ::-1]
@@ -186,10 +187,11 @@ def _flip_h(image, boxes, angles): #水平翻转
         boxes[:, 0::2] = width - boxes[:, 2::-2]
         angles = angles.copy()
         angles[:] = 0.0 - angles[:]
-        angles[angles[:]==90.0] = -90.0
+        angles[angles[:] == 90.0] = -90.0
     return image, boxes, angles
 
-def _flip_v(image, boxes, angles): #垂直翻转
+
+def _flip_v(image, boxes, angles):  # 垂直翻转
     height, _, _ = image.shape
     if random.randrange(2):
         image = image[::-1, :]
@@ -199,7 +201,6 @@ def _flip_v(image, boxes, angles): #垂直翻转
         angles[:] = 0.0 - angles[:]
         angles[angles[:] == 90.0] = -90.0
     return image, boxes, angles
-
 
 
 def preproc(image, input_size, mean, std, swap=(2, 0, 1)):
@@ -216,13 +217,13 @@ def preproc(image, input_size, mean, std, swap=(2, 0, 1)):
     ).astype(np.float32)
     padded_img[: int(img.shape[0] * r), : int(img.shape[1] * r)] = resized_img
 
-    padded_img = padded_img[:, :, ::-1] # 将bgr转化为rgb
+    padded_img = padded_img[:, :, ::-1]  # 将bgr转化为rgb
     padded_img /= 255.0
     if mean is not None:
         padded_img -= mean
     if std is not None:
         padded_img /= std
-    padded_img = padded_img.transpose(swap) # 将rgb转化为bgr
+    padded_img = padded_img.transpose(swap)  # 将rgb转化为bgr
     padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
     return padded_img, r
 
@@ -234,13 +235,13 @@ class TrainTransformOBB:
         self.p = p
         self.max_labels = max_labels
 
-    def __call__(self, image, targets, input_dim): # target  [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
+    def __call__(self, image, targets, input_dim):  # target  [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
         boxes = targets[:, :4].copy()
-        labels = targets[:, 5].copy() # modify  labels = targets[:, 4].copy()
-        angles = targets[:, 4].copy()  #add
+        labels = targets[:, 5].copy()  # modify  labels = targets[:, 4].copy()
+        angles = targets[:, 4].copy()  # add
         if len(boxes) == 0:
-            #targets = np.zeros((self.max_labels, 5), dtype=np.float32) # delete
-            targets = np.zeros((self.max_labels, 6), dtype=np.float32) #add
+            # targets = np.zeros((self.max_labels, 5), dtype=np.float32) # delete
+            targets = np.zeros((self.max_labels, 6), dtype=np.float32)  # add
             image, r_o = preproc(image, input_dim, self.means, self.std)
             image = np.ascontiguousarray(image, dtype=np.float32)
             return image, targets
@@ -249,44 +250,44 @@ class TrainTransformOBB:
         targets_o = targets.copy()
         height_o, width_o, _ = image_o.shape
         boxes_o = targets_o[:, :4]
-        labels_o = targets_o[:, 5] # modify labels_o = targets_o[:, 4]
-        angles_o = targets_o[:, 4] #add
+        labels_o = targets_o[:, 5]  # modify labels_o = targets_o[:, 4]
+        angles_o = targets_o[:, 4]  # add
         # bbox_o: [xyxy] to [c_x,c_y,w,h]
-        boxes_o = xyxy2cxcywh(boxes_o) #[c_x,c_y,w,h]
+        boxes_o = xyxy2cxcywh(boxes_o)  # [c_x,c_y,w,h]
 
-        image_t = _distort(image) # distort
-        #image_t, boxes = _mirror(image_t, boxes) # 50%概率水平翻转
-        image_t, boxes, angles = _flip_h(image_t, boxes, angles) # 50%概率水平翻转 , 翻转后角度要变
-        image_t, boxes, angles = _flip_v(image_t, boxes, angles) # 50%概率垂直翻转 , 翻转后角度要变
+        image_t = _distort(image)  # distort
+        # image_t, boxes = _mirror(image_t, boxes) # 50%概率水平翻转
+        image_t, boxes, angles = _flip_h(image_t, boxes, angles)  # 50%概率水平翻转 , 翻转后角度要变
+        image_t, boxes, angles = _flip_v(image_t, boxes, angles)  # 50%概率垂直翻转 , 翻转后角度要变
         height, width, _ = image_t.shape
         image_t, r_ = preproc(image_t, input_dim, self.means, self.std)
         # image_t：resize且padding后的图片, r_:resize的比例
         # boxes [xyxy] 2 [cx,cy,w,h]
-        boxes = xyxy2cxcywh(boxes) #[c_x,c_y,w,h]
-        boxes *= r_ #缩放boxes
+        boxes = xyxy2cxcywh(boxes)  # [c_x,c_y,w,h]
+        boxes *= r_  # 缩放boxes
 
-        mask_b = np.minimum(boxes[:, 2], boxes[:, 3]) > 4 #如果bbox的长或者宽小于8，那么忽略这个bbox
+        mask_b = np.minimum(boxes[:, 2], boxes[:, 3]) > 4  # 如果bbox的长或者宽小于8，那么忽略这个bbox
         boxes_t = boxes[mask_b]
         labels_t = labels[mask_b]
-        angles_t = angles[mask_b] #add
+        angles_t = angles[mask_b]  # add
 
         if len(boxes_t) == 0:
             image_t, r_o = preproc(image_o, input_dim, self.means, self.std)
             boxes_o *= r_o
             boxes_t = boxes_o
             labels_t = labels_o
-            angles_t = angles_o #add
+            angles_t = angles_o  # add
 
         labels_t = np.expand_dims(labels_t, 1)
-        angles_t = np.expand_dims(angles_t, 1) #add
+        angles_t = np.expand_dims(angles_t, 1)  # add
 
         # targets_t = np.hstack((labels_t, boxes_t)) #delete
         targets_t = np.hstack((labels_t, boxes_t, angles_t))
         # padded_labels = np.zeros((self.max_labels, 5)) #delete
-        padded_labels = np.zeros((self.max_labels, 6)) #add
+        padded_labels = np.zeros((self.max_labels, 6))  # add
         padded_labels[range(len(targets_t))[: self.max_labels]] = targets_t[
-            : self.max_labels
-        ] #保留前self.max_labels个标注
+                                                                  : self.max_labels
+                                                                  ]  # 保留前self.max_labels个标注
         padded_labels = np.ascontiguousarray(padded_labels, dtype=np.float32)
         image_t = np.ascontiguousarray(image_t, dtype=np.float32)
         return image_t, padded_labels

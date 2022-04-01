@@ -2,13 +2,12 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) 2014-2021 Megvii Inc. All rights reserved.
 
-import numpy as np
 import cv2
-from DOTA_devkit_YOLO import polyiou
-
+import numpy as np
 import torch
 import torchvision
 
+from DOTA_devkit_YOLO import polyiou
 
 __all__ = [
     "filter_box",
@@ -18,8 +17,8 @@ __all__ = [
     "adjust_box_anns",
     "xyxy2xywh",
     "xyxy2cxcywh",
-    'bboxes_iou_obb',#add
-    'py_cpu_nms_poly',#add
+    'bboxes_iou_obb',  # add
+    'py_cpu_nms_poly',  # add
     'postprocessobb',
     'postprocessobb_kld'
 ]
@@ -36,7 +35,7 @@ def filter_box(output, scale_range):
     return output[keep]
 
 
-def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): #[batch, n_anchors_all, 4 + 1 +  80]
+def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45):  # [batch, n_anchors_all, 4 + 1 +  80]
     box_corner = prediction.new(prediction.shape)
     box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
     box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
@@ -51,7 +50,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): #[batch,
         if not image_pred.size(0):
             continue
         # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True) #[n_anchors_all, 1]
+        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)  # [n_anchors_all, 1]
 
         conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
         # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
@@ -75,7 +74,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): #[batch,
     return output
 
 
-def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [batch, n_anchors_all, 4 + 1 + 180 + 80]
+def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45):  # [batch, n_anchors_all, 4 + 1 + 180 + 80]
     # box_corner = prediction.new(prediction.shape)
     # box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
     # box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
@@ -90,15 +89,15 @@ def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [ba
         if not image_pred.size(0):
             continue
         # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 185: 185 + num_classes], 1, keepdim=True) # [n_anchors_all, 1]
+        class_conf, class_pred = torch.max(image_pred[:, 185: 185 + num_classes], 1, keepdim=True)  # [n_anchors_all, 1]
         _, angle_pred = torch.max(image_pred[:, 5: 185], 1, keepdim=True)
-        angle_pred = angle_pred - 90 #(-90, 89)
-        #print(angle_pred)
-
+        angle_pred = angle_pred - 90  # (-90, 89)
+        # print(angle_pred)
 
         conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
         # Detections ordered as (x, y, w, h, angle_pred, class_conf, class_pred, obj_conf)
-        detections = torch.cat((image_pred[:, :4], angle_pred.float(), class_conf, class_pred.float(), image_pred[:, 4].unsqueeze(1)), 1)
+        detections = torch.cat(
+            (image_pred[:, :4], angle_pred.float(), class_conf, class_pred.float(), image_pred[:, 4].unsqueeze(1)), 1)
         detections = detections[conf_mask]
         if not detections.size(0):
             continue
@@ -107,7 +106,7 @@ def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [ba
         boxes = np.zeros((0, 10))
         boxes_class = np.zeros((0, 9))
 
-        #print(detections[0:5, :])
+        # print(detections[0:5, :])
 
         for j in range(detections.shape[0]):
             if -90 < detections[j][4] <= 0:
@@ -117,11 +116,11 @@ def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [ba
                 detections[j][4] = 90.0
             rect = ((detections[j][0], detections[j][1]), (detections[j][3], detections[j][2]), detections[j][4])
 
-            #rect = ((detections[j][0], detections[j][1]), (detections[j][2], detections[j][3]), detections[j][4])
-            box = cv2.boxPoints(rect) # (x1,y1,x2,y2,x3,y3,x4,y4)
+            # rect = ((detections[j][0], detections[j][1]), (detections[j][2], detections[j][3]), detections[j][4])
+            box = cv2.boxPoints(rect)  # (x1,y1,x2,y2,x3,y3,x4,y4)
             box = np.int0(box)
             box = box.reshape(-1)
-            box = np.append(box, detections[j][5]*detections[j][7])
+            box = np.append(box, detections[j][5] * detections[j][7])
             box = np.append(box, detections[j][6])
             # (x1,y1,x2,y2,x3,y3,x4,y4, class_conf*obj_conf, class_pred)
             box_class = np.copy(box[0:9])
@@ -134,7 +133,7 @@ def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [ba
 
         nms_out_index = py_cpu_nms_poly(boxes_class, nms_thre)
         boxes = boxes[nms_out_index]
-        boxes = torch.from_numpy(boxes) #(x1,y1,x2,y2,x3,y3,x4,y4, class_conf*obj_conf, class_pred)
+        boxes = torch.from_numpy(boxes)  # (x1,y1,x2,y2,x3,y3,x4,y4, class_conf*obj_conf, class_pred)
 
         if output[i] is None:
             output[i] = boxes
@@ -143,7 +142,7 @@ def postprocessobb(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [ba
     return output
 
 
-def postprocessobb_kld(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): # [batch, n_anchors_all, 5 + 1 + 80]
+def postprocessobb_kld(prediction, num_classes, conf_thre=0.7, nms_thre=0.45):  # [batch, n_anchors_all, 5 + 1 + 80]
     # box_corner = prediction.new(prediction.shape)
     # box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
     # box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
@@ -153,14 +152,15 @@ def postprocessobb_kld(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): #
 
     output = [None for _ in range(len(prediction))]
     for i, image_pred in enumerate(prediction):
-        #(x,y,w,h,angle,obj_conf,n_class)
+        # (x,y,w,h,angle,obj_conf,n_class)
         # If none are remaining => process next image
         if not image_pred.size(0):
             continue
         # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 6: 6 + num_classes], 1, keepdim=True) # [n_anchors_all, 1]
+        class_conf, class_pred = torch.max(image_pred[:, 6: 6 + num_classes], 1, keepdim=True)  # [n_anchors_all, 1]
         conf_mask = (image_pred[:, 5] * class_conf.squeeze() >= conf_thre).squeeze()
-        detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float(), image_pred[:, 5].unsqueeze(1)), dim=1)
+        detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float(), image_pred[:, 5].unsqueeze(1)),
+                               dim=1)
         detections = detections[conf_mask]
         if not detections.size(0):
             continue
@@ -169,7 +169,7 @@ def postprocessobb_kld(prediction, num_classes, conf_thre=0.7, nms_thre=0.45): #
         boxes = np.zeros((0, 10))
         boxes_class = np.zeros((0, 9))
 
-        #print(detections[0:5, :])
+        # print(detections[0:5, :])
 
         for j in range(detections.shape[0]):
             if -90 < detections[j][4] <= 0:
@@ -218,9 +218,9 @@ def py_cpu_nms_poly(dets, thresh):
     areas = []
     for i in range(len(dets)):
         tm_polygon = polyiou.VectorDouble([dets[i][0], dets[i][1],
-                                            dets[i][2], dets[i][3],
-                                            dets[i][4], dets[i][5],
-                                            dets[i][6], dets[i][7]])
+                                           dets[i][2], dets[i][3],
+                                           dets[i][4], dets[i][5],
+                                           dets[i][6], dets[i][7]])
         polys.append(tm_polygon)
 
     # argsort将元素小到大排列 返回索引值 [::-1]即从后向前取元素
@@ -237,7 +237,6 @@ def py_cpu_nms_poly(dets, thresh):
         inds = np.where(ovr <= thresh)[0]  # 找出iou小于阈值的索引
         order = order[inds + 1]
     return keep
-
 
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
@@ -323,6 +322,7 @@ def bboxes_iou_obb(gt_bboxes_per_image, bboxes_preds_per_image):
         for j in range(bboxes_preds_per_image.shape[0]):
             ious[i][j] = iou_rotate_calculate(gt_bboxes_per_image[i], bboxes_preds_per_image[j])
     return ious
+
 
 def bboxes_iou_obb_cuda(gt_bboxes_per_image, bboxes_preds_per_image):
     ious = np.zeros((gt_bboxes_per_image.shape[0], bboxes_preds_per_image.shape[0]), dtype=np.float32)

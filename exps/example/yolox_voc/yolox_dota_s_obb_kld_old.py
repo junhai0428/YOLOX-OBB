@@ -11,17 +11,17 @@ from yolox.exp import ExpOBB_KLD as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        self.input_size = (640, 640)  # add
+        self.input_size = (1024, 1024)  # add
         self.random_size = (28, 36)
         self.num_classes = 1
-        self.depth = 0.33
-        self.width = 0.375
+        self.depth = 0.25
+        self.width = 0.25
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
         # --------------- transform config ----------------- #
         self.degrees = 0.0
         self.translate = 0.1
-        self.scale = (0.5, 1.5)
+        self.scale = (0.1, 2)
         self.mscale = (0.8, 1.6)
         self.shear = 2.0
         self.perspective = 0.0
@@ -30,14 +30,14 @@ class Exp(MyExp):
         # --------------  training config --------------------- #
         self.warmup_epochs = 15
         self.max_epoch = 150
-        self.warmup_lr = 1e-5
+        self.warmup_lr = 0
         self.basic_lr_per_img = 0.0025 / 16.0
         self.scheduler = "yoloxwarmcos"
         self.no_aug_epochs = 15
         self.min_lr_ratio = 0.05
         self.ema = True
 
-        self.weight_decay = 1e-4
+        self.weight_decay = 5e-4
         self.momentum = 0.9
         self.save_interval = 10
         self.print_interval = 5

@@ -6,12 +6,11 @@ import sys
 import tempfile
 import time
 from collections import ChainMap
-from loguru import logger
-from tqdm import tqdm
 
 import numpy as np
-
 import torch
+from loguru import logger
+from tqdm import tqdm
 
 from yolox.utils import gather, is_main_process, postprocess, synchronize, time_synchronized
 
@@ -22,12 +21,12 @@ class VOCEvaluator:
     """
 
     def __init__(
-        self,
-        dataloader,
-        img_size,
-        confthre,
-        nmsthre,
-        num_classes,
+            self,
+            dataloader,
+            img_size,
+            confthre,
+            nmsthre,
+            num_classes,
     ):
         """
         Args:
@@ -46,13 +45,13 @@ class VOCEvaluator:
         self.num_images = len(dataloader.dataset)
 
     def evaluate(
-        self,
-        model,
-        distributed=False,
-        half=False,
-        trt_file=None,
-        decoder=None,
-        test_size=None,
+            self,
+            model,
+            distributed=False,
+            half=False,
+            trt_file=None,
+            decoder=None,
+            test_size=None,
     ):
         """
         VOC average precision (AP) Evaluation. Iterate inference on the test dataset
@@ -92,7 +91,7 @@ class VOCEvaluator:
             model = model_trt
 
         for cur_iter, (imgs, _, info_imgs, ids) in enumerate(
-            progress_bar(self.dataloader)
+                progress_bar(self.dataloader)
         ):
             with torch.no_grad():
                 imgs = imgs.type(tensor_type)
@@ -132,7 +131,7 @@ class VOCEvaluator:
     def convert_to_voc_format(self, outputs, info_imgs, ids):
         predictions = {}
         for (output, img_h, img_w, img_id) in zip(
-            outputs, info_imgs[0], info_imgs[1], ids
+                outputs, info_imgs[0], info_imgs[1], ids
         ):
             if output is None:
                 predictions[int(img_id)] = (None, None, None)
@@ -170,9 +169,9 @@ class VOCEvaluator:
             [
                 "Average {} time: {:.2f} ms".format(k, v)
                 for k, v in zip(
-                    ["forward", "NMS", "inference"],
-                    [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
-                )
+                ["forward", "NMS", "inference"],
+                [a_infer_time, a_nms_time, (a_infer_time + a_nms_time)],
+            )
             ]
         )
 

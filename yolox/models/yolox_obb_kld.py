@@ -8,7 +8,6 @@ from .yolo_head_obb_kld import YOLOXHeadOBB_KLD
 from .yolo_pafpn import YOLOPAFPN
 
 
-
 class YOLOXOBB_KLD(nn.Module):
     """
     YOLOX model module. The module list is defined by create_yolov3_modules function.

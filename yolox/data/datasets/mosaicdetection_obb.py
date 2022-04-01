@@ -8,9 +8,8 @@ import cv2
 import numpy as np
 
 from yolox.utils import adjust_box_anns
-
-from ..data_augment_obb import box_candidates, random_perspective
 from .datasets_wrapper import Dataset
+from ..data_augment_obb import box_candidates, random_perspective
 
 
 def get_mosaic_coordinate(mosaic_image, mosaic_index, xc, yc, w, h, input_h, input_w):
@@ -38,9 +37,9 @@ class MosaicDetectionOBB(Dataset):
     """Detection dataset wrapper that performs mixup for normal dataset."""
 
     def __init__(
-        self, dataset, img_size, mosaic=True, preproc=None,
-        degrees=0.0, translate=0.1, scale=(0.5, 1.5), mscale=(0.5, 1.5),
-        shear=2.0, perspective=0.0, enable_mixup=False, *args
+            self, dataset, img_size, mosaic=True, preproc=None,
+            degrees=0.0, translate=0.1, scale=(0.5, 1.5), mscale=(0.5, 1.5),
+            shear=2.0, perspective=0.0, enable_mixup=False, *args
     ):
         """
 
@@ -90,7 +89,7 @@ class MosaicDetectionOBB(Dataset):
             for i_mosaic, index in enumerate(indices):
                 img, _labels, _, _ = self._dataset.pull_item(index)
                 # img 原始图片
-                #_labels: [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
+                # _labels: [[xmin, ymin, xmax, ymax, angle, label_ind], ... ]
                 h0, w0 = img.shape[:2]  # orig hw
                 scale = min(1. * input_h / h0, 1. * input_w / w0)
                 img = cv2.resize(
@@ -125,7 +124,7 @@ class MosaicDetectionOBB(Dataset):
                 np.clip(mosaic_labels[:, 2], 0, 2 * input_w, out=mosaic_labels[:, 2])
                 np.clip(mosaic_labels[:, 3], 0, 2 * input_h, out=mosaic_labels[:, 3])
 
-            #旋转框degrees=0,perspective=0
+            # 旋转框degrees=0,perspective=0
             mosaic_img, mosaic_labels = random_perspective(
                 mosaic_img,
                 mosaic_labels,
@@ -136,7 +135,6 @@ class MosaicDetectionOBB(Dataset):
                 perspective=self.perspective,
                 border=[-input_h // 2, -input_w // 2],
             )  # border to remove
-
 
             # -----------------------------------------------------------------
             # CopyPaste: https://arxiv.org/abs/2012.07177
@@ -166,7 +164,6 @@ class MosaicDetectionOBB(Dataset):
             # img_info  原始图片大小(height, width)
             # id_ index
 
-
     def mixup(self, origin_img, origin_labels, input_dim):
         jit_factor = random.uniform(*self.mixup_scale)
         FLIP = random.uniform(0, 1) > 0.5
@@ -187,7 +184,7 @@ class MosaicDetectionOBB(Dataset):
             interpolation=cv2.INTER_LINEAR,
         ).astype(np.float32)
         cp_img[
-            : int(img.shape[0] * cp_scale_ratio), : int(img.shape[1] * cp_scale_ratio)
+        : int(img.shape[0] * cp_scale_ratio), : int(img.shape[1] * cp_scale_ratio)
         ] = resized_img
         cp_img = cv2.resize(
             cp_img,
@@ -210,15 +207,15 @@ class MosaicDetectionOBB(Dataset):
         if padded_img.shape[1] > target_w:
             x_offset = random.randint(0, padded_img.shape[1] - target_w - 1)
         padded_cropped_img = padded_img[
-            y_offset: y_offset + target_h, x_offset: x_offset + target_w
-        ]
+                             y_offset: y_offset + target_h, x_offset: x_offset + target_w
+                             ]
 
         cp_bboxes_origin_np = adjust_box_anns(
             cp_labels[:, :4].copy(), cp_scale_ratio, 0, 0, origin_w, origin_h
         )
         if FLIP:
             cp_bboxes_origin_np[:, 0::2] = (
-                origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
+                    origin_w - cp_bboxes_origin_np[:, 0::2][:, ::-1]
             )
         cp_bboxes_transformed_np = cp_bboxes_origin_np.copy()
         cp_bboxes_transformed_np[:, 0::2] = np.clip(
