@@ -104,11 +104,11 @@ class DOTAOBBDetection(Dataset):
         self.target_transform = target_transform
         self.name = dataset_name
         self._annopath = os.path.join("%s", "Annotations", "%s.xml")
-        self._imgpath = os.path.join("%s", "JPEGImages", "%s.png")
+        self._imgpath = os.path.join("%s", "JPEGImages", "%s.jpg")
         if image_sets[0][1] == 'val':  # add
-            self._imgpath = os.path.join("%s", "JPEGImages-val", "%s.png")  # add
+            self._imgpath = os.path.join("%s", "JPEGImages-val", "%s.jpg")  # add
         elif image_sets[0][1] == 'test':
-            self._imgpath = os.path.join("%s", "JPEGImages-test", "%s.png")  # add
+            self._imgpath = os.path.join("%s", "JPEGImages-test", "%s.jpg")  # add
         self._classes = VOC_CLASSES
         self.ids = list()
         for (year, name) in image_sets:

@@ -201,3 +201,6 @@ if __name__ == "__main__":
         dist_url=dist_url,
         args=(exp, args, num_gpu),
     )
+
+    from tools.draw import draw
+    draw()

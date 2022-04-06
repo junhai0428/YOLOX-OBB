@@ -34,11 +34,11 @@ def readlabeltxt(txtpath, height, width, hbb=True):
         boxes = []
         rects = []
         for i, splitline in enumerate(splitlines):
-            #if i in [0, 1]:  # DOTA数据集前两行对于我们来说是无用的
-                #continue
+            if i in [0, 1]:  # DOTA数据集前两行对于我们来说是无用的
+                continue
             label = splitline[8]
-            #if label not in category_set:  # 只书写制定的类别
-                #continue
+            if label not in category_set:  # 只书写制定的类别
+                continue
             x1 = int(float(splitline[0]))
             y1 = int(float(splitline[1]))
             x2 = int(float(splitline[2]))
@@ -63,14 +63,6 @@ def readlabeltxt(txtpath, height, width, hbb=True):
                 box = [xx1, yy1, xx2, yy2, difficult, label]
                 boxes.append(box)
             else:  # 否则是obb
-                # x1 = limit_value(x1, width)
-                # y1 = limit_value(y1, height)
-                # x2 = limit_value(x2, width)
-                # y2 = limit_value(y2, height)
-                # x3 = limit_value(x3, width)
-                # y3 = limit_value(y3, height)
-                # x4 = limit_value(x4, width)
-                # y4 = limit_value(y4, height)
                 cnt = np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
                 rect = cv2.minAreaRect(cnt)
                 c_x, c_y = rect[0]
@@ -97,7 +89,6 @@ def readlabeltxt(txtpath, height, width, hbb=True):
                 ymax = limit_value(ymax, height)
                 #####
                 box = [xmin, ymin, xmax, ymax, angle, difficult, label]
-                #box = [x1, y1, x2, y2, x3, y3, x4, y4, label]
                 boxes.append(box)
                 rects.append(rect)
     return boxes, rects
@@ -260,19 +251,19 @@ def writeXml(tmp, imgname, w, h, d, bboxes, hbb=True):
 
 
 if __name__ == '__main__':
-    data_path = '/home/yangyang/yangyang/DATA/gxw/dataset/DOTA_split/val'
-    images_path = os.path.join(data_path, 'images')  # 样本图片路径
-    labeltxt_path = os.path.join(data_path, 'labelTxt_obb_v1')  # DOTA标签的所在路径
-    anno_new_path = os.path.join(data_path, 'obbxml')  # 新的voc格式存储位置（hbb形式）
-    ext = '.png'  # 样本图片的后缀
+    data_path = '/data/vpta/dataset/VOC2012'
+    images_path = os.path.join(data_path, 'JPEGImages')  # 样本图片路径
+    labeltxt_path = os.path.join(data_path, 'labelTxt')  # DOTA标签的所在路径
+    anno_new_path = os.path.join(data_path, 'Annotations')  # 新的voc格式存储位置（hbb形式）
+    ext = '.jpg'  # 样本图片的后缀
     filenames = os.listdir(labeltxt_path)  # 获取每一个txt的名称
     for filename in filenames:
+        print("########", filename)
         filepath = labeltxt_path + '/' + filename  # 每一个DOTA标签的具体路径
         picname = os.path.splitext(filename)[0] + ext
         pic_path = os.path.join(images_path, picname)
         im = cv2.imread(pic_path)  # 读取相应的图片
         (H, W, D) = im.shape  # 返回样本的大小
-        #(H, W, D) = (1024, 1024, 3)
         boxes, rects = readlabeltxt(filepath, H, W, hbb=False)  # 默认是矩形（hbb）得到gt
         if len(boxes) == 0:
             print('文件为空', filepath)
@@ -281,43 +272,3 @@ if __name__ == '__main__':
         # 书写xml
         writeXml(anno_new_path, picname, W, H, D, boxes, hbb=False)
         print('正在处理%s' % filename)
-
-        # ## draw picture
-        # for rect in rects:
-        #     box = cv2.boxPoints(rect)
-        #     box = np.int0(box)
-        #     print(box)
-        #     [x1, y1], [x2, y2], [x3, y3], [x4, y4] = box
-        #     cv2.line(im, (x1, y1), (x2, y2), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x2, y2), (x3, y3), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x3, y3), (x4, y4), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x4, y4), (x1, y1), (0, 255, 255), 2, cv2.LINE_AA)
-        # cv2.imshow('dst', im)
-        # cv2.waitKey(2000)
-
-
-        # for bbox in boxes:
-        #     xmin, ymin, xmax, ymax, angle = bbox[0:5]
-        #     w = xmax - xmin
-        #     h = ymax - ymin
-        #     x_c = (xmin+xmax) / 2
-        #     y_c = (ymin+ymax) / 2
-        #     if -90 < angle <= 0:
-        #         h, w = w, h
-        #         angle = angle + 90.0
-        #     if angle == -90.0:
-        #         angle = angle + 180
-        #     ret = [[x_c, y_c], [w, h], angle]
-        #     box = cv2.boxPoints(ret)
-        #     box = np.int0(box)
-        #     [x1, y1], [x2, y2], [x3, y3], [x4, y4] = box
-        #     cv2.line(im, (x1, y1), (x2, y2), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x2, y2), (x3, y3), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x3, y3), (x4, y4), (0, 255, 255), 2, cv2.LINE_AA)
-        #     cv2.line(im, (x4, y4), (x1, y1), (0, 255, 255), 2, cv2.LINE_AA)
-        # cv2.imshow('dst', im)
-        # cv2.waitKey(0)
-        # break
-
-
-

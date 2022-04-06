@@ -60,7 +60,8 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
-        self.file_name = os.path.join(exp.output_dir, args.experiment_name)
+        self.file_name = os.path.join(exp.output_dir,
+                                      args.experiment_name + datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
 
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
@@ -112,6 +113,7 @@ class Trainer:
         # add
         if self.rank == 0:
             if (self.progress_in_iter + 1) % 10 == 0:
+                self.tblogger.add_images("train/inputs", inps, self.progress_in_iter + 1,)
                 self.tblogger.add_scalar("train/total_loss", self.total_loss_iter / 10, self.progress_in_iter + 1)
                 self.tblogger.add_scalar("train/iou_loss", self.iou_loss_iter / 10, self.progress_in_iter + 1)
                 # self.tblogger.add_scalar("train/l1_loss", self.l1_loss_iter / 10, self.progress_in_iter + 1)
